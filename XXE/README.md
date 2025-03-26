@@ -67,7 +67,7 @@ echo "hello";
 访问localhost/hello.php  
 下面是成功的情况  
 ![alt text](image-5.png)  
-如果没有配置好，可能是  
+如果没有配置好，可能是下面的样子  
 ![alt text](image-6.png)  
 
 # XXE  
