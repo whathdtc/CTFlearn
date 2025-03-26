@@ -29,12 +29,13 @@ httpd下载连接
 https://www.apachelounge.com/download/ 
 ```  
 解压缩之后有一个叫Apache24的文件夹，如果移动到其他地方，需要自己修改配置，如果直接放在C盘，就不需要再修改配置。  
-
-再Apache24/bin目录运行ApacheMoniter.exe  
+配置文件是Apache24/config/httpd.conf,找到图中内容，把路径修改为自己的路径  
+在Apache24/bin目录双击运行ApacheMoniter.exe  
 ![alt text](image.png)  
 ![alt text](image-1.png)  
 如果没有打开，左键单击图标可以开启  
 ![alt text](image-2.png)
+如果左键没有反应，右键单击，打开open servers,看到Apache2.4,就开启他  
 
 启动成功后访问localhost，页面应该和Apache24/htdocs/index.html一样  
 ![alt text](image-3.png)  
@@ -68,4 +69,7 @@ echo "hello";
 ![alt text](image-5.png)  
 如果没有配置好，可能是  
 ![alt text](image-6.png)  
+
+# XXE  
+XXE（XML外部实体注入）是一种针对应用程序处理XML数据的方式的攻击。在这种攻击中，攻击者利用应用程序对XML输入的处理不当，访问敏感数据。  
 
