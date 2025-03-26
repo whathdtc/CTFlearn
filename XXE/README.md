@@ -183,7 +183,7 @@ fclose($file);
 <text>hello</text>
 </comment>
 ```  
-http://192.168.88.1/get.php没有收到请求，test.txt的内容不会发生变化  
+est.txt的内容不会发生变化，因为send没有被定义，没有发出请求  
 
 3. send并不一定需要是参数，也可以是通用实体，用如下方式也可以得到目标内容  
 kk.txt  
