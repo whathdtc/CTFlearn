@@ -33,7 +33,7 @@ https://www.php.net/downloads.php
 
 上面是Non Thread Safe,下面是Thread Safe,下载Thread Safe的，解压之后放好  
 
-打开Apache24/conf/httpd.conf文件，在合适的地方添加下面内容，文件内有很多标签，不要加在标签内部就可以了。文件路径该为自己php的路径。  
+打开Apache24/conf/httpd.conf文件，在合适的地方添加下面内容，文件内有很多标签，不要加在标签内部就可以了。文件路径为自己php的路径。  
 ```
 LoadModule php_module 'C:/server/php8.4.5/php8apache2_4.dll'
 PHPIniDir 'C:/server/php8.4.5'
@@ -46,12 +46,11 @@ AddType application/x-httpd-php .php
 
 echo "hello";
 ```  
-然后重启httpd
-![alt text](image-2.png)  
+
 访问localhost/hello.php  
 下面是成功的情况  
 ![alt text](image-5.png)  
-如果没有配置好，可能是下面的样子  
+如果是下面的样子，可能是因为修改了配置文件之后没有重新启动服务，重启试试  
 ![alt text](image-6.png)  
 
 # XXE  
@@ -59,7 +58,7 @@ XXE（XML外部实体注入）是一种针对应用程序处理XML数据的方�
 
 ## XML  
 XML 是可扩展标记语言（Extensible Markup Language），是一种标签语言，用来传输和存储数据。必须使用树形结构。  
-DTD用于定义XML文档的结构、元素、属性、实体等合法组成规则。  
+DTD用于定义XML文档的结构、元素、属性、实体等合法组成规则。这是xxe攻击的关键位置  
 XML实体在DTD中被声明，用于代替内容或标记。  
 
 ## 一个XXE的简单例子  
@@ -78,13 +77,24 @@ XML实体在DTD中被声明，用于代替内容或标记。
 <text>&root;</text>
 </comment>
 ```  
+第一行是一个声明，这里说明了xml的版本  
+xml文件可以分为两个部分，一个是dtd，一个是xml的数据部分  
+- dtd  
+使用下面的格式  
+```xml  
+<!DOCTYPE root[
+
+]>
+```  
+root一般是根标签名字  
+SYSTEM声明外部实体，会将后面的字符串识别为一个资源的路径，并加载资源赋给实体的值  
+
 提交之后发现评论区出现了根目录的内容  
 ![alt text](image-9.png)  
 
-第七页，因为现代REST框架，服务器可能会处理开发者没有考虑的情况，这里请求体使用json格式，但是服务端仍然可以处理xml格式的信息，所以conten-type之后采用同样的方式攻击  
-修改两处，一个是Content-Type，修改成如图内容，一个是修改请求体，修改内容和上一题一样  
+- xml数据  
+一般就是一些标签，类似html，但是所有的标签都必须在根标签内部  
 
-## XXE DOS
 
 ## blind xxe  
 
@@ -281,7 +291,17 @@ excel表实质上是一个压缩包，大量使用了xml格式的文件来存储
 查看本地test.txt文件  
 ![alt text](image-20.png)  
 
-
+## xxe dos  
+攻击者可以构造一个XML文档，其中包含大量递归实体或者引用非常大的外部文件，导致XML解析器在处理时消耗大量内存或CPU资源，从而拖慢甚至崩溃服务器。  
+一个实体递归的例子  
+```xml
+<!DOCTYPE root [
+  <!ENTITY a "lol">
+  <!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">
+  <!ENTITY c "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">
+]>
+<root>&c;</root>  
+```  
 
 # 几个XXE题目  
 
