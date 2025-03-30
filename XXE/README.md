@@ -1,12 +1,12 @@
 # 目录
 
 [环境](#环境)  
-  - [webgoat](##WebGoat搭建)
+  - [webgoat](#WebGoat搭建)
   -  [php和Apache httpd](#php和Apache-httpd)
 
 [XXE](#XXE)
   - [xml简介](#XML)
-  - [XXE攻击](#XXE攻击)
+  - [XXE原理简介](#XXE原理简介)
   - [blind XXE](#blind-xxe)  
     - [外带数据](#外带数据实现xxe攻击)  
     - [内网穿透](#内网穿透 )
@@ -20,7 +20,8 @@
   - [BUUCTF XXE COURSE 1](#BUUCTF-XXE-COURSE-1)
   - [filejava](#BUUCTF-filejava )
 
-# 环境
+# 环境  
+WebGoat为后面的内容提供了部分例题，在Blind XXE中，需要提供一个http服务，确保本地和目标主机都能访问，作者使用Apache在本地搭建,blind xxe使用外带数据，作者使用了一个php代码，需要php环境  
 ## WebGoat搭建  
 安装docker,使用以下命令  
 ```bash
@@ -80,6 +81,8 @@ echo "hello";
 ![alt text](image-6.png)  
 
 # XXE  
+
+## XXE原理简介  
 XXE（XML外部实体注入）是一种针对应用程序处理XML数据的方式的攻击。在这种攻击中，攻击者利用应用程序对XML输入的处理不当，访问敏感数据。  
 
 ## XML  
@@ -87,7 +90,7 @@ XML 是可扩展标记语言（Extensible Markup Language），是一种标签�
 DTD用于定义XML文档的结构、元素、属性、实体等合法组成规则。这是xxe攻击的关键位置  
 XML实体在DTD中被声明，用于代替内容或标记。  
 
-## XXE攻击  
+## XXE案例    
 ![alt text](image-7.png)  
 要求找到根目录下的内容有什么  
 
