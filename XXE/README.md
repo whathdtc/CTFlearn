@@ -13,7 +13,7 @@
     - [内网穿透](#内网穿透 )
   - [其他情景xxe攻击](#其他情景xxe攻击)  
     - [CVE-2014-3529](#CVE-2014-3529)
-    - [excel中的xm](#excel中的xm)  
+    - [excel中的xml](#excel中的xm)  
   
 [XXE练习](#XXE练习)  
   - [Fake XML cookbook](#BUUCTF-Fake-XML-cookbook)
