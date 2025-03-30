@@ -5,8 +5,9 @@
   -  [php和Apache httpd](#php和Apache-httpd)
 
 [XXE](#XXE)
-  - [xml简介](#XML)
   - [XXE原理简介](#XXE原理简介)
+  - [xml简介](#XML)
+  
   - [blind XXE](#blind-xxe)  
     - [外带数据](#外带数据实现xxe攻击)  
     - [内网穿透](#内网穿透 )
@@ -81,6 +82,7 @@ echo "hello";
 ![alt text](image-6.png)  
 
 # XXE  
+
 
 ## XXE原理简介  
 XXE（XML外部实体注入）是一种针对应用程序处理XML数据的方式的攻击。在这种攻击中，攻击者利用应用程序对XML输入的处理不当，访问敏感数据。  
