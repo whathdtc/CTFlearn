@@ -1,11 +1,11 @@
+[toc]
+
 # 环境
 ## WebGoat 搭建  
 安装docker,使用以下命令  
 ```bash
 docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 webgoat/webgoat
 ```  
-
-
 ## php和Apache httpd  
 httpd下载连接  
 ```
