@@ -89,21 +89,23 @@ xml文件可以分为两个部分，一个是dtd，一个是xml的数据部分
 root一般是根标签名字  
 SYSTEM声明外部实体，会将后面的字符串识别为一个资源的路径，并加载资源赋给实体的值  
 
+- xml数据  
+一般就是一些标签，类似html，但是所有的标签都必须在根标签内部  
+
 提交之后发现评论区出现了根目录的内容  
 ![alt text](image-9.png)  
 
-- xml数据  
-一般就是一些标签，类似html，但是所有的标签都必须在根标签内部  
+
 
 
 ## blind xxe  
 
-服务端可能设置一些过滤规则，或者由于某些特殊字符导致返回结果不可见。以一个题为例  
+服务端可能设置一些规则，比如检查关键字或者特殊字符，将原本的数据修改或者过滤后返回，或者是已开发者原本就没有做回显信息的功能，即便成功访问到关键数据，也没有返回给攻击者  
 
-任务是找出/home/webgoat/.webgoat-2023.8//XXE/webgoat/secret.txt的内容  
+webgoat的一个例题，任务是找出/home/webgoat/.webgoat-2023.8//XXE/webgoat/secret.txt的内容  
 ![alt text](image-10.png)  
 
-首先发个请求抓包  
+首先发个评论，抓包  
 ![alt text](image-11.png)
 按照xxe的思路，将请求体修改为一下内容发送，评论区将显示想要的结果  
 ```xml
@@ -214,7 +216,7 @@ kk.txt
 ```  
 ![alt text](image-14.png)  
 因为服务端检验的逻辑是，首先判断请求体的原始数据有没有包含secret的内容，只要有就通过  
-如果没有就xml解析，展开实体，但是作者写成secret的内容是否包含了text标签的内容，所以随便加点就可以绕过
+如果没有就xml解析，展开实体，但是webgoat的开发者写成secret的内容是否包含了text标签的内容，作者怀疑是开发者写错了，所以随便加点就可以绕过  
 关键代码如下，完整代码的位置在WebGoat\src\main\java\org\owasp\webgoat\lessons\xxe，源码在github上可以下载  
 ```java  
  if (commentStr.contains(fileContentsForUser)) {
@@ -248,7 +250,7 @@ kk.txt
 
 如果目标主机不在本地，可以使用内网穿透等方式。  
 作者使用内网穿透的方式，有很多工具可以实现，比如ngrok,Tunnelblick,cloudflared等等，作者对于这些工具了解不多，但仅从完成xxe的角度来说，作者认为cloudflared是免费，操作简单，稳定的。  
-在https://github.com/cloudflare/cloudflared/releases/tag/2025.2.1下载  
+下载地址https://github.com/cloudflare/cloudflared/releases/tag/2025.2.1
 开启http服务后，使用命令  
 ```bash
 .\cloudflared.exe tunnel --url http://localhost:80
@@ -262,7 +264,7 @@ kk.txt
 xml不仅可以作为请求体的结构，有些应用程序的配置文件也采用xml格式，程序会因为标签的属性或内容不同而产生不同的效果，比如webgoat的配置文件就是pom.xml,其中java.version标签指明了使用的java版本。  
 excel表实质上是一个压缩包，大量使用了xml格式的文件来存储信息。解压的内容如下  
 ![](image-21.png)  
-[Content_Types].xml是主要的配置文件，excel解析时触发xxe的关键文件  
+[Content_Types].xml是主要的配置文件，也是excel解析时触发xxe的关键文件  
 
 ###  CVE-2014-3529  
 
@@ -276,7 +278,7 @@ excel表实质上是一个压缩包，大量使用了xml格式的文件来存储
 ![alt text](image-17.png)  
 修改后缀为zip，解压  
 ![alt text](image-18.png)  
-打开xml文件  修改为如下内容,和原文件相比，仅仅添加dtd部分    
+打开xml文件  修改为如下内容,和原文件相比，仅仅添加了dtd部分    
 ```xml
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!DOCTYPE ANY [ 
@@ -286,7 +288,7 @@ excel表实质上是一个压缩包，大量使用了xml格式的文件来存储
 
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>
 ```  
-压缩，将压缩包后缀改为xlsx，选择该文件并上传，上传后跳转如下页面，复制文件名，返回解析  
+压缩，将压缩包后缀改为xlsx，选择该文件并上传，上传后返回保存的文件名，复制文件名，返回解析  
 ![alt text](image-19.png)  
 查看本地test.txt文件  
 ![alt text](image-20.png)  
@@ -357,9 +359,12 @@ for i in range(1,256):
     except:
         continue
 ```  
-重定向，然后搜索flag  
-![alt text](image-21.png)  
-![alt text](image-22.png)  
+重定向
+```bash
+python re.py > out.txt  
+```
+然后在out.txt中搜索flag  
+
 
 
 ## BUUCTF XXE COURSE 1  
