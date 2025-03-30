@@ -35,7 +35,9 @@ https://www.php.net/downloads.php
 选择一个版本，点击Windows downloads，
 ![alt text](image-4.png)  
 
-上面是Non Thread Safe,下面是Thread Safe,下载Thread Safe的，解压之后放好  
+如图，有Non Thread Safe和Thread Safe,下载Thread Safe的，解压之后放好  
+![alt text](image-35.png)
+
 
 打开Apache24/conf/httpd.conf文件，在合适的地方添加下面内容，文件内有很多标签，不要加在标签内部就可以了。文件路径为自己php的路径。  
 ```
@@ -257,14 +259,13 @@ kk.txt
 
 如果目标主机不在本地，可以使用内网穿透等方式。  
 作者使用内网穿透的方式，有很多工具可以实现，比如ngrok,Tunnelblick,cloudflared等等，作者对于这些工具了解不多，但仅从完成xxe的角度来说，作者认为cloudflared是免费，操作简单，稳定的。  
-下载地址https://github.com/cloudflare/cloudflared/releases/tag/2025.2.1
+下载地址https://github.com/cloudflare/cloudflared/releases/tag/2025.2.1  
 开启http服务后，使用命令  
 ```bash
 .\cloudflared.exe tunnel --url http://localhost:80
 ```  
 ![alt text](image-15.png)  
 框框内就是新的url  
-准备好之后立刻继续  
 
 ## 其他情景xxe攻击  
 
