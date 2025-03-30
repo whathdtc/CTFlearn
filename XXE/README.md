@@ -19,7 +19,9 @@
   - [Fake XML cookbook](#BUUCTF-Fake-XML-cookbook)
   - [True XML cookbook](#BUUCTF-True-XML-cookbook)
   - [BUUCTF XXE COURSE 1](#BUUCTF-XXE-COURSE-1)
-  - [filejava](#BUUCTF-filejava )
+  - [filejava](#BUUCTF-filejava )  
+
+第一节介绍了实验所需要的环境和搭建方法。XXE部分介绍一般xxe，blind xxe和xxe dos。首先说明了XXE的攻击原理和关键文件类型xml。XXE练习题由BUUCTF提供。  
 
 # 环境  
 WebGoat为后面的内容提供了部分例题，在Blind XXE中，需要提供一个http服务，确保本地和目标主机都能访问，作者使用Apache在本地搭建,blind xxe使用外带数据，作者使用了一个php代码，需要php环境  
@@ -341,8 +343,10 @@ excel表实质上是一个压缩包，大量使用了xml格式的文件来存储
 ```  
 
 # XXE练习  
+BUUCTF贡献了很多题目，在BUUCTF搜索就可以找到了  
+https://buuoj.cn/challenges  
 
-## BUUCTF Fake XML cookbook  
+## Fake XML cookbook    
 ![alt text](image-22.png)  
 
 随便输入登录，抓包发现是xml格式，用户名出现在msg标签中  
@@ -363,7 +367,7 @@ excel表实质上是一个压缩包，大量使用了xml格式的文件来存储
 ![alt text](image-25.png)
 
 
-## BUUCTF True XML cookbook  
+## True XML cookbook  
 一样的界面  
 先使用同样的方式xxe攻击，但是没有显示结果，可能是攻击失败，也可能没有这个文件  
 
@@ -404,7 +408,7 @@ python hello.py > out.txt
 ![alt text](image-29.png)
 
 
-## BUUCTF XXE COURSE 1  
+## XXE COURSE 1  
 一个登录界面，输入提交之后有回显，抓包发现是用xml格式发送数据  
 ![alt text](image-30.png)  
 直接找flag
@@ -418,7 +422,7 @@ python hello.py > out.txt
 可以找到  
 ![alt text](image-31.png)  
 
-## BUUCTF filejava  
+## filejava  
 ![alt text](image-33.png)  
 启动httpd服务，内网穿透  
 kk.txt  
