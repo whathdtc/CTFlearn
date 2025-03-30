@@ -1,7 +1,27 @@
-[toc]
+# 目录
+
+[环境](#环境)  
+  - [webgoat](##WebGoat搭建)
+  -  [php和Apache httpd](#php和Apache-httpd)
+
+[XXE](#XXE)
+  - [xml简介](#XML)
+  - [XXE攻击](#XXE攻击)
+  - [blind XXE](#blind-xxe)  
+    - [外带数据](#外带数据实现xxe攻击)  
+    - [内网穿透](#内网穿透 )
+  - [其他情景xxe攻击](#其他情景xxe攻击)  
+    - [CVE-2014-3529](#CVE-2014-3529)
+    - [excel中的xm](#excel中的xm)  
+  
+[XXE练习](#XXE练习)  
+  - [Fake XML cookbook](#BUUCTF-Fake-XML-cookbook)
+  - [True XML cookbook](#BUUCTF-True-XML-cookbook)
+  - [BUUCTF XXE COURSE 1](#BUUCTF-XXE-COURSE-1)
+  - [filejava](#BUUCTF-filejava )
 
 # 环境
-## WebGoat 搭建  
+## WebGoat搭建  
 安装docker,使用以下命令  
 ```bash
 docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 webgoat/webgoat
@@ -67,7 +87,7 @@ XML 是可扩展标记语言（Extensible Markup Language），是一种标签�
 DTD用于定义XML文档的结构、元素、属性、实体等合法组成规则。这是xxe攻击的关键位置  
 XML实体在DTD中被声明，用于代替内容或标记。  
 
-## 一个XXE的简单例子  
+## XXE攻击  
 ![alt text](image-7.png)  
 要求找到根目录下的内容有什么  
 
@@ -269,6 +289,7 @@ kk.txt
 
 ## 其他情景xxe攻击  
 
+### excel中的xml  
 xml不仅可以作为请求体的结构，有些应用程序的配置文件也采用xml格式，程序会因为标签的属性或内容不同而产生不同的效果，比如webgoat的配置文件就是pom.xml,其中java.version标签指明了使用的java版本。  
 excel表实质上是一个压缩包，大量使用了xml格式的文件来存储信息。解压的内容如下  
 ![](image-21.png)  
@@ -314,7 +335,7 @@ excel表实质上是一个压缩包，大量使用了xml格式的文件来存储
 <root>&c;</root>  
 ```  
 
-# 几个XXE题目  
+# XXE练习  
 
 ## BUUCTF Fake XML cookbook  
 ![alt text](image-22.png)  
@@ -392,7 +413,7 @@ python hello.py > out.txt
 可以找到  
 ![alt text](image-31.png)  
 
-## BUUCTF [网鼎杯 2020 青龙组]filejava  
+## BUUCTF filejava  
 ![alt text](image-33.png)  
 启动httpd服务，内网穿透  
 kk.txt  
